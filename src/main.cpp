@@ -3,7 +3,7 @@
 
 int main() {
     // Création de la fenêtre (Syntaxe SFML 3.0)
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Projet Pokemon Binome");
+    sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Projet Pokemon Binome");
 
     while (window.isOpen()) {
         // Gestion des événements
