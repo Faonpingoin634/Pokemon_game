@@ -1,50 +1,63 @@
-# Projet Pokemon Game (C++ / SFML)
+# 🎮 Pokémon Game Engine (C++ / SFML)
 
-Un moteur de jeu 2D style RPG (type Pokemon) développé en **C++** avec la bibliothèque **SFML 3.0**.
-Ce projet gère l'affichage de cartes basées sur des tuiles (Tilemaps), la gestion de caméra dynamique, les animations de sprites et les collisions.
+Un moteur de jeu 2D style RPG (type Pokémon) développé en **C++** avec la bibliothèque **SFML 3.0**.
 
-## Fonctionnalités Actuelles
+Le projet a récemment évolué d'un script unique vers une **architecture Orientée Objet** propre (Classes séparées). Il intègre désormais des collisions complexes (sol et décor), une caméra intelligente et une transition vers le mode combat.
 
-* **Moteur de Tilemap :** Chargement et affichage de cartes via des fichiers CSV (exportés depuis Tiled).
-* **Système de Calques (Layers) :**
-    * *Sol :* Couche de fond (Herbe, terre, eau).
-    * *Décor :* Couche supérieure avec transparence (Arbres, rochers) permettant de passer "derrière" les objets.
-* **Caméra Intelligente :**
-    * Suivi fluide du joueur.
-    * **Clamping :** La caméra se bloque aux bords de la carte (on ne voit jamais le vide/noir).
-    * **Zoom :** Zoom avant/arrière avec la molette de la souris (limité pour ne pas sortir de la map).
-* **Joueur (Nouveau) :**
-    * **Sprite Animé :** Utilisation d'une feuille de sprites (Sprite Sheet) au lieu d'un carré de couleur.
-    * **Animation 4 Directions :** Le personnage s'anime (marche) vers le Haut, le Bas, la Gauche et la Droite en fonction du mouvement.
-    * **Mise à l'échelle (Scale) :** Redimensionnement dynamique du sprite (ex: division par 2) pour correspondre à la taille des tuiles.
-    * **Déplacements :** Contrôles ZQSD fluides.
-    * **Collisions :** Impossible de sortir des limites de la carte.
+## 🚀 Fonctionnalités Actuelles
 
-## Technologies & Outils
+### 🌍 Moteur & Carte
+* **Tilemap Engine :** Chargement de cartes via fichiers CSV.
+* **Système Double Couche :**
+    * *Calque Sol :* Fond de carte (Terre, Eau, Sable).
+    * *Calque Décor :* Objets (Arbres, Barrières, Fleurs).
+* **Collisions Avancées :**
+    * Système de **Whitelist** : Le code définit les tuiles traversables. Tout le reste (Arbres, Eau, Murs invisibles) devient solide.
+    * Le joueur "glisse" contre les murs (gestion indépendante des axes X et Y).
 
-* **Langage :** C++ (Standard C++17 ou supérieur recommandé).
-* **Bibliothèque Graphique :** [SFML 3.0.2](https://www.sfml-dev.org/) (Gestion fenêtre, graphismes, événements).
-* **Level Design :** [Tiled Map Editor](https://www.mapeditor.org/) (Création des maps et export en CSV).
-* **Graphismes :** Piskel ou Paint.NET pour le nettoyage des Sprite Sheets.
+### 🎥 Caméra Intelligente
+* **Suivi Fluide :** La caméra reste centrée sur le joueur.
+* **Clamping (Verrouillage) :** La caméra ne sort **jamais** des limites de la carte. Fini les bandes noires autour du jeu !
+* **Zoom Sécurisé :** Le dézoom est bloqué mathématiquement pour ne pas dépasser la taille de la carte.
 
-## Structure du Projet
+### 🚶 Joueur & Animation
+* **Sprite Animé :** Gestion propre via la classe `Player`.
+* **4 Directions :** Animation de marche (Haut, Bas, Gauche, Droite) fluide.
+* **Gestion d'état :** Le joueur s'arrête sur la bonne frame quand il ne bouge plus.
 
-Voici l'organisation des fichiers :
+### ⚔️ Système de Combat (WIP)
+* **Hautes Herbes (ID 80) :**
+    * Détection automatique quand le joueur marche dans les herbes.
+    * **Timer RNG :** 40% de chance de rencontre toutes les 0.4 secondes de marche.
+
+
+## 🛠 Architecture Technique
+
+Le code a été entièrement refactorisé pour être modulaire et extensible :
+
+* **`src/main.cpp` :** Le Chef d'orchestre. Il gère la boucle de jeu (Game Loop), les entrées clavier et l'alternance entre les états (Exploration/Battle).
+* **`src/Map.cpp` / `include/Map.hpp` :**
+    * Gère le chargement des fichiers `.csv`.
+    * Gère l'affichage optimisé (VertexArray).
+    * Contient la logique `isSolidAt(x, y)` pour vérifier les murs et l'eau.
+* **`src/Player.cpp` / `include/Player.hpp` :**
+    * Encapsule le Sprite SFML.
+    * Gère la logique d'animation (`update(dt)`) et les déplacements.
+
+## 📂 Structure du Projet
 
 ```text
 MonProjetPokemon/
-├── assets/                  # Ressources du jeu
-│   ├── textures/            # Tilesets (ex: free_pixel_16_woods.png)
-│   └── maps/                # Fichiers sources Tiled (.tmx) et exports (.csv)
-├── lib/                     # Correspond à SFML
-├── src/                     # Code Source (.cpp)
-│   ├── main.cpp             # Point d'entrée, boucle de jeu, animation et gestion de la map
-│   ├── Game.cpp             # (A venir) Gestion globale
-│   └── ...
+├── assets/                  # Ressources (Textures, CSV...)
+├── lib/                     # Bibliothèques SFML
 ├── include/                 # Fichiers En-tête (.hpp)
-├── Makefile                 # Script de compilation (ou CMakeLists.txt)
-├── mappokemon_decord.csv    # Données du calque décor
-├── mappokemon_sol.csv       # Données du calque sol
-├── free_pixel_16_woods.png  # Png pour la map (Open source : [https://zedpxl.itch.io/pixelart-forest-asset-pack](https://zedpxl.itch.io/pixelart-forest-asset-pack))
-├── player_sheet.png         # Sprite Sheet du joueur (Fond transparent)
-└── README.md                # Documentation
+│   ├── Map.hpp              # Définition de la Carte
+│   ├── Player.hpp           # Définition du Joueur
+│   └── ...
+├── src/                     # Code Source (.cpp)
+│   ├── main.cpp             # Boucle principale
+│   ├── Map.cpp              # Implémentation Carte & Collisions
+│   └── Player.cpp           # Implémentation Joueur & Animation
+├── Makefile                 # Script de compilation automatisé
+├── README.md                # Documentation
+└── *.png / *.csv            # Fichiers de ressources (racine)
