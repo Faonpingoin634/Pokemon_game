@@ -1,6 +1,6 @@
-#include "Creature.hpp"
+#include "../include/Creature.hpp"
 
-Creature::Creature(std::string newName, int maxHp, int atk) {
+Creature::Creature(std::string newName, int maxHp, int atk) : sprite(texture) {
     name = newName;
     maxHealth = maxHp;
     healthPoints = maxHp;
@@ -16,4 +16,8 @@ void Creature::takeDamage(int amount) {
 
 bool Creature::isAlive() const {
     return healthPoints > 0;
+}
+
+void Creature::restoreHealth() {
+    healthPoints = maxHealth;
 }

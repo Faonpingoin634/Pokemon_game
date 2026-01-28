@@ -18,4 +18,6 @@ public:
     
     void takeDamage(int amount);
     bool isAlive() const;
+
+    void restoreHealth();
 };
