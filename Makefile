@@ -4,10 +4,12 @@ CXX = g++
 # 2. Le nom de ton jeu
 EXEC = monjeu.exe
 
-# 3. Les fichiers sources (.cpp)
+# 3. Les fichiers sources (AJOUTE LES NOUVEAUX FICHIERS ICI)
 SRC = src/main.cpp \
       src/Map.cpp \
-      src/Player.cpp
+      src/Player.cpp \
+      src/BattleSystem.cpp \
+      src/Creature.cpp
 
 # 4. Transformation automatique (.cpp -> .o)
 OBJ = $(SRC:.cpp=.o)
@@ -32,7 +34,6 @@ $(EXEC): $(OBJ)
 	@echo "Done! Lance le jeu avec ./$(EXEC)"
 
 # Règle générique : Comment transformer n'importe quel .cpp en .o
-# Cela évite d'écrire une règle pour Map, une pour Player, une pour Main...
 .cpp.o:
 	$(CXX) -c $< -o $@ $(CXXFLAGS)
 

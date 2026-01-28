@@ -15,33 +15,32 @@ public:
 private:
     Creature* playerCreature;
     Creature* enemyCreature;
-
     bool isPlayerTurn;
     bool battleEnded;
     int currentSelectionIndex;
 
     sf::Texture backgroundTexture;
-    sf::Sprite backgroundSprite;
-
     sf::Texture playerTexture;
+    sf::Texture enemyTexture;
+
+    sf::Sprite backgroundSprite;
     sf::Sprite playerSprite;
+    sf::Sprite enemySprite;
+
     sf::RectangleShape playerHpBar;
     sf::RectangleShape playerHpBackground;
-    sf::Text playerHpText;
-
-    sf::Texture enemyTexture;
-    sf::Sprite enemySprite;
     sf::RectangleShape enemyHpBar;
     sf::RectangleShape enemyHpBackground;
-    sf::Text enemyHpText;
+    sf::RectangleShape selectionCursor;
 
     sf::Font font;
+
+    sf::Text playerHpText;
+    sf::Text enemyHpText;
     sf::Text attack1Text;
     sf::Text attack2Text;
     sf::Text attack3Text;
     sf::Text battleLog;
-
-    sf::RectangleShape selectionCursor;
 
     void executeTurn(int attackIndex);
     void executeEnemyTurn();
