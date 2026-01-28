@@ -9,6 +9,8 @@ public:
     int maxHealth;
     int attackPower;
     
+
+    
     sf::Texture texture;
     sf::Sprite sprite;
 
