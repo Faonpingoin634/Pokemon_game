@@ -42,6 +42,9 @@ private:
     sf::Text attack3Text;
     sf::Text battleLog;
 
+    sf::Clock turnTimer;
+    bool waitingForEnemy = false;
+
     void executeTurn(int attackIndex);
     void executeEnemyTurn();
     void updateHealthUI();

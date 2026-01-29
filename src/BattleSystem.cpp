@@ -94,23 +94,32 @@ void BattleSystem::startBattle(Creature& player, Creature& opponent) {
 
 void BattleSystem::update() {
     if (battleEnded) return;
+
+    if (waitingForEnemy && !isPlayerTurn) {
+        if (turnTimer.getElapsedTime().asSeconds() > 1.0f) { 
+            executeEnemyTurn();
+            waitingForEnemy = false;
+            isPlayerTurn = true;
+        }
+    }
+    
     updateHealthUI();
 }
 
 void BattleSystem::handleInput(sf::Keyboard::Key key) {
-    if (battleEnded) return;
+    if (battleEnded || waitingForEnemy) return;
 
-    if (key == sf::Keyboard::Key::Space) {
+    if (key == sf::Keyboard::Key::Enter || key == sf::Keyboard::Key::Space) {
         if (isPlayerTurn && playerCreature && enemyCreature) {
-            std::cout << "Pikachu attaque !" << std::endl;
+            // Logique d'attaque
             enemyCreature->takeDamage(playerCreature->attackPower);
-            isPlayerTurn = false; 
             
-            // Riposte immédiate
             if (enemyCreature->isAlive()) {
-                std::cout << "Dracaufeu riposte !" << std::endl;
-                playerCreature->takeDamage(enemyCreature->attackPower);
-                isPlayerTurn = true;
+                isPlayerTurn = false; 
+                waitingForEnemy = true;
+                turnTimer.restart(); 
+            } else {
+                battleEnded = true;
             }
         }
     }
@@ -155,4 +164,19 @@ void BattleSystem::draw(sf::RenderWindow& window) {
     
     window.draw(playerHpText);
     window.draw(enemyHpText);
+}
+
+void BattleSystem::executeEnemyTurn() {
+    if (!enemyCreature || !playerCreature) return;
+
+    // L'ennemi attaque le joueur
+    playerCreature->takeDamage(enemyCreature->attackPower);
+    
+    std::cout << enemyCreature->name << " riposte et inflige " 
+              << enemyCreature->attackPower << " degats !" << std::endl;
+
+    if (!playerCreature->isAlive()) {
+        battleEnded = true;
+        std::cout << "Le joueur a perdu le combat..." << std::endl;
+    }
 }
