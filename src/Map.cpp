@@ -32,7 +32,8 @@ bool Map::isTileSolid(int tileId) {
     switch (tileId) {
         // --- TOUT CE QUI EST TRAVERSABLE ---
         case -1: case 80: 
-        case 94: case 60: case 116: case 72: case 102: case 59: case 115:
+        case 94: case 60: case 116: case 72: 
+        case 102: case 59: case 115:
         case 127: case 128: case 82: case 81: 
         case 17: case 18: case 19: case 20:
         case 69: case 73: case 144: case 187: 
