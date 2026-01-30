@@ -45,6 +45,11 @@ private:
     sf::Clock turnTimer;
     bool waitingForEnemy = false;
 
+    bool isAnimating = false;
+    sf::Vector2f originalPos;
+    float animTime = 0.0f;
+    sf::Sprite* attackingSprite = nullptr;
+
     void executeTurn(int attackIndex);
     void executeEnemyTurn();
     void updateHealthUI();
