@@ -26,19 +26,19 @@ int main() {
         std::cerr << "Erreur chargement Player" << std::endl;
         return -1;
     }
-    // Place le joueur au milieu
     player.setPosition({(float)map.getWidth() * 16 / 2.0f, (float)map.getHeight() * 16 / 2.0f});
 
-    // --- INITIALISATION COMBAT ---
-    BattleSystem battleSystem;
-    
+    // --- DONNÉES PERSISTANTES ---
     Creature pikachu("Pikachu", 100, 20);
     Creature dracaufeu("Dracaufeu", 120, 25);
+
+    // --- GESTION DU COMBAT (DYNAMIQUE) ---
+    BattleSystem* battleSystem = nullptr; 
 
     // --- 2. VARIABLES ---
     sf::View view = window.getDefaultView();
     float currentZoom = 0.25f;
-    view.zoom(currentZoom); // On applique le zoom de départ
+    view.zoom(currentZoom);
 
     GameState currentState = GameState::Exploration;
     sf::Clock clock;
@@ -50,17 +50,20 @@ int main() {
 
         // GESTION DES EVENTS
         while (const std::optional event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) window.close();
+            if (event->is<sf::Event::Closed>()) {
+                // Nettoyage de sécurité avant fermeture
+                if (battleSystem != nullptr) delete battleSystem;
+                window.close();
+            }
             
             // --- GESTION INPUT COMBAT ---
-            if (currentState == GameState::Battle) {
+            if (currentState == GameState::Battle && battleSystem != nullptr) {
                 if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
-                    battleSystem.handleInput(key->code);
+                    battleSystem->handleInput(key->code);
                 }
             }
             // --- GESTION INPUT EXPLORATION ---
             else if (currentState == GameState::Exploration) {
-                // Zoom
                 if (const auto* scroll = event->getIf<sf::Event::MouseWheelScrolled>()) {
                     float zoomFactor = (scroll->delta > 0) ? 0.9f : 1.1f;
                     sf::Vector2f nextViewSize = view.getSize() * zoomFactor;
@@ -104,55 +107,55 @@ int main() {
             if (pos.y > maxH - 8) pos.y = maxH - 8;
             player.setPosition(pos);
 
-            // Animation
             player.setMoving(isMoving, dir); 
             player.update(dt); 
 
-            // Hautes Herbes -> Déclenchement Combat
+            // Déclenchement Combat
             if (isMoving && map.isGrassAt(pos.x, pos.y)) {
                 grassTimer += dt;
                 if (grassTimer > 0.4f) {
                     grassTimer = 0.0f;
-                    if (std::rand() % 100 < 40) { // 40% de chance
+                    if (std::rand() % 100 < 40) { 
                         std::cout << "COMBAT !" << std::endl;
                         currentState = GameState::Battle;
 
                         dracaufeu.restoreHealth();
                         pikachu.restoreHealth();
                         
-                        battleSystem.startBattle(pikachu, dracaufeu);
+                        // ALLOCATION DYNAMIQUE : On charge les ressources du combat
+                        battleSystem = new BattleSystem(); 
+                        battleSystem->startBattle(pikachu, dracaufeu);
                         
-                        // IMPORTANT : On passe en vue par défaut pour le combat !
                         window.setView(window.getDefaultView()); 
                     }
                 }
             } else { grassTimer = 0.0f; }
 
-            // Caméra Follow (Seulement en exploration)
+            // Caméra
             view.setCenter(player.getPosition());
             sf::Vector2f viewSize = view.getSize();
             sf::Vector2f center = view.getCenter();
-            float worldW = map.getWidth() * 16.0f; float worldH = map.getHeight() * 16.0f;
             if (center.x - viewSize.x / 2.0f < 0) center.x = viewSize.x / 2.0f;
             if (center.y - viewSize.y / 2.0f < 0) center.y = viewSize.y / 2.0f;
-            if (center.x + viewSize.x / 2.0f > worldW) center.x = worldW - viewSize.x / 2.0f;
-            if (center.y + viewSize.y / 2.0f > worldH) center.y = worldH - viewSize.y / 2.0f;
+            if (center.x + viewSize.x / 2.0f > maxW) center.x = maxW - viewSize.x / 2.0f;
+            if (center.y + viewSize.y / 2.0f > maxH) center.y = maxH - viewSize.y / 2.0f;
             view.setCenter(center);
             window.setView(view);
 
-            // Dessin Exploration
             window.clear(sf::Color(20, 20, 30));
             map.draw(window);
             player.draw(window);
         }
-        else if (currentState == GameState::Battle) {
-            // On s'assure que la caméra regarde TOUT l'écran, pas juste un zoom
+        else if (currentState == GameState::Battle && battleSystem != nullptr) {
             window.setView(window.getDefaultView());
 
-            // --- LOGIQUE COMBAT ---
-            battleSystem.update();
+            battleSystem->update();
 
-            if (battleSystem.isBattleOver()) {
+            if (battleSystem->isBattleOver()) {
+                // LIBÉRATION MÉMOIRE : On décharge les ressources
+                delete battleSystem;
+                battleSystem = nullptr;
+
                 currentState = GameState::Exploration;
                 
                 view = window.getDefaultView(); 
@@ -162,7 +165,7 @@ int main() {
             }
 
             window.clear(sf::Color::Black); 
-            battleSystem.draw(window);
+            if (battleSystem) battleSystem->draw(window);
         }
 
         window.display();
