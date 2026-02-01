@@ -50,7 +50,5 @@ private:
     float animTime = 0.0f;
     sf::Sprite* attackingSprite = nullptr;
 
-    void executeTurn(int attackIndex);
-    void executeEnemyTurn();
     void updateHealthUI();
 };

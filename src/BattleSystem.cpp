@@ -14,7 +14,7 @@ BattleSystem::BattleSystem() :
     attack3Text(font),
     battleLog(font)
 {
-    // --- 1. CHARGEMENT DES IMAGES ---
+    // --- 1. CHARGEMENT IMAGES ---
     if (!backgroundTexture.loadFromFile("assets/textures/battle_background.png")) {
         std::cerr << "ERREUR: Impossible de charger battle_background.png" << std::endl;
     }
@@ -24,6 +24,7 @@ BattleSystem::BattleSystem() :
     float scaleY = 720.0f / size.y;
     backgroundSprite.setScale({scaleX, scaleY});
 
+    // --- JOUEUR ---
     if (!playerTexture.loadFromFile("assets/textures/ditto_front.png")) { 
         std::cerr << "ERREUR: Impossible de charger ditto_front.png" << std::endl;
     }
@@ -31,6 +32,7 @@ BattleSystem::BattleSystem() :
     playerSprite.setPosition({280.f, 180.f});
     playerSprite.setScale({3.f, 3.f});
 
+    // --- ENNEMI ---
     if (!enemyTexture.loadFromFile("assets/textures/mawile_back.png")) {
         std::cerr << "ERREUR: Impossible de charger mawile_back.png" << std::endl;
     }
@@ -42,7 +44,8 @@ BattleSystem::BattleSystem() :
          std::cerr << "ERREUR: Impossible de charger arial.ttf" << std::endl;
     }
 
-    // --- 2. CONFIGURATION DE L'INTERFACE ---
+    // --- 2. INTERFACE (UI) ---
+    // Ennemi
     enemyHpBackground.setSize({200.f, 20.f});
     enemyHpBackground.setFillColor(sf::Color::Red);
     enemyHpBackground.setPosition({520.f, 50.f});
@@ -51,6 +54,11 @@ BattleSystem::BattleSystem() :
     enemyHpBar.setFillColor(sf::Color::Green);
     enemyHpBar.setPosition({520.f, 50.f});
 
+    enemyHpText.setCharacterSize(20);
+    enemyHpText.setFillColor(sf::Color::White);
+    enemyHpText.setPosition({520.f, 80.f});
+
+    // Joueur
     playerHpBackground.setSize({200.f, 20.f});
     playerHpBackground.setFillColor(sf::Color::Red);
     playerHpBackground.setPosition({550.f, 350.f});
@@ -63,15 +71,10 @@ BattleSystem::BattleSystem() :
     playerHpText.setFillColor(sf::Color::White);
     playerHpText.setPosition({550.f, 380.f});
 
-    enemyHpText.setCharacterSize(20);
-    enemyHpText.setFillColor(sf::Color::White);
-    enemyHpText.setPosition({520.f, 80.f});
-
+    // Initialisation variables
     isPlayerTurn = true;
     battleEnded = false;
     currentSelectionIndex = 0;
-    
-    // Init variables animation
     isAnimating = false;
     waitingForEnemy = false;
     attackingSprite = nullptr;
