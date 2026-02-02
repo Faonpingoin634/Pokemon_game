@@ -4,12 +4,13 @@ CXX = g++
 # 2. Le nom de ton jeu
 EXEC = monjeu.exe
 
-# 3. Les fichiers sources (AJOUTE LES NOUVEAUX FICHIERS ICI)
+# 3. Les fichiers sources
 SRC = src/main.cpp \
       src/Map.cpp \
       src/Player.cpp \
       src/BattleSystem.cpp \
-      src/Creature.cpp
+      src/Creature.cpp \
+      src/Game.cpp
 
 # 4. Transformation automatique (.cpp -> .o)
 OBJ = $(SRC:.cpp=.o)
