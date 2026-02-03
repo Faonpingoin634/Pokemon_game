@@ -47,8 +47,10 @@ private:
 
     bool isAnimating = false;
     sf::Vector2f originalPos;
-    float animTime = 0.0f;
+    float animTime;
     sf::Sprite* attackingSprite = nullptr;
+
+    void executeTurn(int moveIndex);
 
     void updateHealthUI();
 };
