@@ -7,10 +7,23 @@ Creature::Creature(std::string newName, int maxHp, int atk) : sprite(texture) {
     attackPower = atk;
 }
 
+void Creature::addMove(std::string name, int power, MoveType type) {
+    if (moves.size() < 3) {
+        moves.push_back({name, power, type});
+    }
+}
+
 void Creature::takeDamage(int amount) {
     healthPoints -= amount;
     if (healthPoints < 0) {
         healthPoints = 0;
+    }
+}
+
+void Creature::heal(int amount) {
+    healthPoints += amount;
+    if (healthPoints > maxHealth) {
+        healthPoints = maxHealth;
     }
 }
 
