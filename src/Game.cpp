@@ -9,6 +9,9 @@ Game::Game()
       currentState(GameState::MainMenu),
       pikachu("Pikachu", 100, 20),
       dracaufeu("Dracaufeu", 120, 25),
+      togepi("Togepi", 60, 10),
+      noctowl("Noctowl", 110, 22),
+      deoxys("Deoxys", 250, 60),
       battleSystem(nullptr),
       grassTimer(0.0f),
       font(), 
@@ -20,25 +23,82 @@ Game::Game()
     window.setFramerateLimit(60);
     std::srand(std::time(nullptr));
 
-    // --- PIKACHU ---
+    // --- CONFIGURATION POKEMON ---
     pikachu.addMove("Charge", 25, ATTACK);
     pikachu.addMove("Vive-attaque", 35, ATTACK);
     pikachu.addMove("Heal", 25, HEAL);
+    if (!pikachu.texture.loadFromFile("assets/textures/ditto_front.png")) std::cerr << "Err Pikachu" << std::endl;
+    pikachu.sprite.setTexture(pikachu.texture);
+    pikachu.sprite.setScale({3.f, 3.f});
+    pikachu.sprite.setPosition({280.f, 180.f});
 
-    // --- DRACAUFEU (IA) ---
     dracaufeu.addMove("Griffe", 30, ATTACK);
     dracaufeu.addMove("Lance-Flamme", 40, ATTACK);
     dracaufeu.addMove("Repos", 30, HEAL);
+    if (!dracaufeu.texture.loadFromFile("assets/textures/mawile_back.png")) std::cerr << "Err Dracaufeu" << std::endl; 
+    dracaufeu.sprite.setTexture(dracaufeu.texture);
+    dracaufeu.sprite.setScale({2.5f, 2.5f});
+    dracaufeu.sprite.setPosition({700.f, 10.f});
+
+    togepi.addMove("Metronome", 15, ATTACK);
+    togepi.addMove("Charme", 10, ATTACK);
+    togepi.addMove("Voeu", 40, HEAL);
+    if (!togepi.texture.loadFromFile("assets/textures/togepi.png")) std::cerr << "Err Togepi" << std::endl;
+    togepi.sprite.setTexture(togepi.texture);
+    togepi.sprite.setScale({2.5f, 2.5f});
+    togepi.sprite.setPosition({750.f, 20.f});
+
+    noctowl.addMove("Picpic", 25, ATTACK);
+    noctowl.addMove("Psyko", 35, ATTACK);
+    noctowl.addMove("Atterrissage", 30, HEAL);
+    if (!noctowl.texture.loadFromFile("assets/textures/noctowl.png")) std::cerr << "Err Noctowl" << std::endl;
+    noctowl.sprite.setTexture(noctowl.texture);
+    noctowl.sprite.setScale({2.5f, 2.5f});
+    noctowl.sprite.setPosition({725.f, -10.f});
+
+    deoxys.addMove("Psycho Boost", 80, ATTACK);
+    deoxys.addMove("Vitesse Extreme", 40, ATTACK);
+    deoxys.addMove("Soin", 50, HEAL);
+    if (!deoxys.texture.loadFromFile("assets/textures/deoxys.png")) std::cerr << "Err Deoxys" << std::endl;
+    deoxys.sprite.setTexture(deoxys.texture);
+    deoxys.sprite.setScale({2.5f, 2.5f});
+    deoxys.sprite.setPosition({700.f, 20.f});
 
 
-    if (!map.load("free_pixel_16_woods.png", "mappokemon_sol.csv", "mappokemon_decord.csv")) exit(-1);
-    if (!player.load("player_sheet.png")) exit(-1);
+    // --- AUDIO ---
+    // 1. Musique d'exploration
+    if (!musicExploration.openFromFile("assets/audio/1-11.-Route-101.ogg")) {
+        std::cerr << "ERREUR : Impossible de charger Route-101.ogg !" << std::endl;
+    }
+    musicExploration.setLooping(true);
+    musicExploration.setVolume(50);
+    musicExploration.play();
+
+    // 2. Musique de combat (Celle que tu viens d'ajouter)
+    if (!musicBattle.openFromFile("assets/audio/battle.ogg")) {
+        std::cerr << "ERREUR : Impossible de charger battle.ogg !" << std::endl;
+    }
+    musicBattle.setLooping(true);
+    musicBattle.setVolume(60);
+
+
+    // --- MAP & JOUEUR ---
+    if (!map.load("assets/textures/free_pixel_16_woods.png", "assets/mappokemon_sol.csv", "assets/mappokemon_decord.csv")) {
+        if (!map.load("free_pixel_16_woods.png", "mappokemon_sol.csv", "mappokemon_decord.csv")) {
+            std::cerr << "Erreur chargement Map" << std::endl;
+        }
+    }
+
+    if (!player.load("assets/textures/player_sheet.png")) {
+        if (!player.load("player_sheet.png")) exit(-1);
+    }
     
     player.setPosition({(float)map.getWidth() * 16 / 2.0f, (float)map.getHeight() * 16 / 2.0f});
     
     view = window.getDefaultView();
     view.zoom(currentZoom);
 
+    // --- FONTS ---
     if (!font.openFromFile("assets/fonts/arial.ttf")) {
         std::cerr << "ERREUR: Font introuvable" << std::endl;
     }
@@ -142,6 +202,11 @@ void Game::update(float dt) {
             delete battleSystem;
             battleSystem = nullptr;
             currentState = GameState::Exploration;
+            
+            // --- FIN DU COMBAT ---
+            musicBattle.stop();       // On arrête la musique de combat
+            musicExploration.play();  // On relance la musique calme
+
             view = window.getDefaultView();
             view.zoom(currentZoom);
             view.setCenter(player.getPosition());
@@ -185,12 +250,43 @@ void Game::handleExploration(float dt) {
         grassTimer += dt;
         if (grassTimer > 0.4f) {
             grassTimer = 0.0f;
+            
             if (std::rand() % 100 < 40) {
+                // --- DEBUT DU COMBAT ---
+                musicExploration.pause(); // Pause musique calme
+                musicBattle.play();       // PLAY musique combat
+
                 currentState = GameState::Battle;
-                dracaufeu.restoreHealth();
+                
                 pikachu.restoreHealth();
+                dracaufeu.restoreHealth();
+                togepi.restoreHealth();
+                noctowl.restoreHealth();
+                deoxys.restoreHealth();
+
+                Creature* opponent = nullptr;
+                
+                int luck = std::rand() % 100;
+                std::cout << "--------------------" << std::endl;
+                std::cout << "Tirage au sort (luck) : " << luck << std::endl;
+
+                if (luck == 0) { 
+                    opponent = &deoxys;
+                    std::cout << ">>> RESULTAT : DEOXYS choisi !" << std::endl;
+                } 
+                else {
+                    int common = std::rand() % 3;
+                    std::cout << "Tirage commun (0-2) : " << common << std::endl;
+                    if (common == 0) { opponent = &dracaufeu; std::cout << ">>> RESULTAT : DRACAUFEU choisi !" << std::endl; }
+                    else if (common == 1) { opponent = &togepi; std::cout << ">>> RESULTAT : TOGEPI choisi !" << std::endl; }
+                    else { opponent = &noctowl; std::cout << ">>> RESULTAT : NOCTOWL choisi !" << std::endl; }
+                }
+                
+                std::cout << "Lancement du combat avec : " << opponent->name << std::endl;
+                std::cout << "--------------------" << std::endl;
+
                 battleSystem = new BattleSystem();
-                battleSystem->startBattle(pikachu, dracaufeu);
+                battleSystem->startBattle(pikachu, *opponent);
                 window.setView(window.getDefaultView());
             }
         }
