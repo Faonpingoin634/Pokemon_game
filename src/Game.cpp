@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cstdlib>
 
+// --- CONSTRUCTEUR ---
 Game::Game() 
     : window(sf::VideoMode({1280, 720}), "Pokemon - Battle System"),
       currentZoom(0.25f),
@@ -18,7 +19,9 @@ Game::Game()
       titleText(font), 
       playText(font), 
       quitText(font),
-      menuSelection(0)
+      menuSelection(0),
+      hasRickrolled(false),
+      rickSprite(rickTexture)
 {
     window.setFramerateLimit(60);
     std::srand(std::time(nullptr));
@@ -66,7 +69,6 @@ Game::Game()
 
 
     // --- AUDIO ---
-    // 1. Musique d'exploration
     if (!musicExploration.openFromFile("assets/audio/1-11.-Route-101.ogg")) {
         std::cerr << "ERREUR : Impossible de charger Route-101.ogg !" << std::endl;
     }
@@ -74,7 +76,6 @@ Game::Game()
     musicExploration.setVolume(50);
     musicExploration.play();
 
-    // 2. Musique de combat (Celle que tu viens d'ajouter)
     if (!musicBattle.openFromFile("assets/audio/battle.ogg")) {
         std::cerr << "ERREUR : Impossible de charger battle.ogg !" << std::endl;
     }
@@ -83,16 +84,17 @@ Game::Game()
 
 
     // --- MAP & JOUEUR ---
-    if (!map.load("assets/textures/free_pixel_16_woods.png", "assets/mappokemon_sol.csv", "assets/mappokemon_decord.csv")) {
+    if (!map.load("free_pixel_16_woods.png", "mappokemon_sol.csv", "mappokemon_decord.csv")) {
         if (!map.load("free_pixel_16_woods.png", "mappokemon_sol.csv", "mappokemon_decord.csv")) {
             std::cerr << "Erreur chargement Map" << std::endl;
         }
     }
 
-    if (!player.load("assets/textures/player_sheet.png")) {
+    if (!player.load("player_sheet.png")) {
         if (!player.load("player_sheet.png")) exit(-1);
     }
     
+    // Position de départ
     player.setPosition({(float)map.getWidth() * 16 / 2.0f, (float)map.getHeight() * 16 / 2.0f});
     
     view = window.getDefaultView();
@@ -120,6 +122,43 @@ Game::Game()
     quitText.setString("QUITTER");
     quitText.setCharacterSize(50);
     quitText.setPosition({530.f, 450.f});
+
+    // --- RICKROLL CONFIG ---
+    
+    // 1. On tente de charger l'image
+    bool loaded = rickTexture.loadFromFile("assets/textures/rick.png");
+    if (!loaded) {
+        loaded = rickTexture.loadFromFile("assets/textures/rick.png");
+    }
+
+    if (!loaded) {
+        std::cerr << "ERREUR FATALE : rick.png introuvable !" << std::endl;
+        
+        sf::Image img;
+        img.resize({100, 100}, sf::Color::Red); 
+        
+        // On charge l'image rouge dans la texture
+        if (!rickTexture.loadFromImage(img)) {
+            std::cerr << "Erreur création texture de secours" << std::endl;
+        }
+    }
+
+    // 2. Mise à jour du Sprite
+    // 'true' force le sprite à prendre la taille de la texture
+    rickSprite.setTexture(rickTexture, true); 
+
+    // 3. Centrage de l'origine
+    sf::Vector2u rSize = rickTexture.getSize();
+    rickSprite.setOrigin({static_cast<float>(rSize.x) / 2.f, static_cast<float>(rSize.y) / 2.f});
+    
+    // 4. Position au centre de l'écran
+    rickSprite.setPosition({640.f, 360.f});
+
+    // 5. Audio
+    if (!rickMusic.openFromFile("assets/audio/rickroll.ogg")) {
+        std::cerr << "ERREUR : Impossible de charger rickroll.ogg" << std::endl;
+    }
+    rickMusic.setLooping(false);
 }
 
 Game::~Game() {
@@ -144,16 +183,20 @@ void Game::processEvents() {
         if (event->is<sf::Event::Closed>()) {
             window.close();
         }
+        
+        // --- MENU ---
         if (currentState == GameState::MainMenu) {
             if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
                 handleMenuInput(key->code);
             }
         }
+        // --- COMBAT ---
         else if (currentState == GameState::Battle && battleSystem != nullptr) {
             if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
                 battleSystem->handleInput(key->code);
             }
         }
+        // --- EXPLORATION ---
         else if (currentState == GameState::Exploration) {
             if (const auto* scroll = event->getIf<sf::Event::MouseWheelScrolled>()) {
                 float zoomFactor = (scroll->delta > 0) ? 0.9f : 1.1f;
@@ -163,6 +206,17 @@ void Game::processEvents() {
                 if (zoomFactor < 1.0f || (nextViewSize.x <= worldW && nextViewSize.y <= worldH)) {
                     view.zoom(zoomFactor);
                     currentZoom *= zoomFactor;
+                }
+            }
+        }
+        // --- RICKROLL ---
+        else if (currentState == GameState::RickRoll) {
+            if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
+                // On laisse la possibilité de quitter avant la fin avec Echap
+                if (key->code == sf::Keyboard::Key::Escape) {
+                    rickMusic.stop();
+                    musicExploration.play();
+                    currentState = GameState::Exploration;
                 }
             }
         }
@@ -203,14 +257,21 @@ void Game::update(float dt) {
             battleSystem = nullptr;
             currentState = GameState::Exploration;
             
-            // --- FIN DU COMBAT ---
-            musicBattle.stop();       // On arrête la musique de combat
-            musicExploration.play();  // On relance la musique calme
+            // Fin du combat
+            musicBattle.stop();
+            musicExploration.play();
 
             view = window.getDefaultView();
             view.zoom(currentZoom);
             view.setCenter(player.getPosition());
             window.setView(view);
+        }
+    }
+    // --- GESTION FIN RICKROLL ---
+    else if (currentState == GameState::RickRoll) {
+        if (rickMusic.getStatus() == sf::SoundSource::Status::Stopped) {
+            musicExploration.play();
+            currentState = GameState::Exploration; 
         }
     }
 }
@@ -226,6 +287,28 @@ void Game::handleExploration(float dt) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) { input.y += speed; dir = 0; isMoving = true; }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Z)) { input.y -= speed; dir = 3; isMoving = true; }
 
+    player.update(dt); 
+
+    // --- LOGIQUE RICKROLL ---
+    sf::Vector2f pos = player.getPosition();
+    
+    int gridX = static_cast<int>((pos.x + 8) / 16); 
+    int gridY = static_cast<int>((pos.y + 8) / 16);
+
+    int tileID = map.getDecorId(gridX, gridY);
+
+    if (tileID == 102 && !hasRickrolled) {
+        
+        hasRickrolled = true;
+
+        musicExploration.stop(); // Coupe musique jeu
+        rickMusic.play();        // Lance Rick
+        
+        currentState = GameState::RickRoll;
+    }
+    
+    // --- COLLISIONS ET MOUVEMENTS ---
+
     sf::Vector2f nextPos = player.getPosition();
     nextPos.x += input.x;
     if (!map.isSolidAt(nextPos.x, nextPos.y)) player.setPosition({nextPos.x, player.getPosition().y});
@@ -234,7 +317,8 @@ void Game::handleExploration(float dt) {
     nextPos.y += input.y;
     if (!map.isSolidAt(nextPos.x, nextPos.y)) player.setPosition({player.getPosition().x, nextPos.y});
 
-    sf::Vector2f pos = player.getPosition();
+    // Limites de map
+    pos = player.getPosition();
     float maxW = map.getWidth() * 16.0f;
     float maxH = map.getHeight() * 16.0f;
     if (pos.x < 8) pos.x = 8;
@@ -246,15 +330,16 @@ void Game::handleExploration(float dt) {
     player.setMoving(isMoving, dir);
     player.update(dt);
 
+    // --- HAUTES HERBES ---
     if (isMoving && map.isGrassAt(pos.x, pos.y)) {
         grassTimer += dt;
         if (grassTimer > 0.4f) {
             grassTimer = 0.0f;
             
             if (std::rand() % 100 < 40) {
-                // --- DEBUT DU COMBAT ---
-                musicExploration.pause(); // Pause musique calme
-                musicBattle.play();       // PLAY musique combat
+                // Combat
+                musicExploration.pause();
+                musicBattle.play();
 
                 currentState = GameState::Battle;
                 
@@ -268,23 +353,16 @@ void Game::handleExploration(float dt) {
                 
                 int luck = std::rand() % 100;
                 std::cout << "--------------------" << std::endl;
-                std::cout << "Tirage au sort (luck) : " << luck << std::endl;
+                std::cout << "Luck: " << luck << std::endl;
 
-                if (luck == 0) { 
-                    opponent = &deoxys;
-                    std::cout << ">>> RESULTAT : DEOXYS choisi !" << std::endl;
-                } 
+                if (luck == 0) opponent = &deoxys;
                 else {
                     int common = std::rand() % 3;
-                    std::cout << "Tirage commun (0-2) : " << common << std::endl;
-                    if (common == 0) { opponent = &dracaufeu; std::cout << ">>> RESULTAT : DRACAUFEU choisi !" << std::endl; }
-                    else if (common == 1) { opponent = &togepi; std::cout << ">>> RESULTAT : TOGEPI choisi !" << std::endl; }
-                    else { opponent = &noctowl; std::cout << ">>> RESULTAT : NOCTOWL choisi !" << std::endl; }
+                    if (common == 0) opponent = &dracaufeu;
+                    else if (common == 1) opponent = &togepi;
+                    else opponent = &noctowl;
                 }
                 
-                std::cout << "Lancement du combat avec : " << opponent->name << std::endl;
-                std::cout << "--------------------" << std::endl;
-
                 battleSystem = new BattleSystem();
                 battleSystem->startBattle(pikachu, *opponent);
                 window.setView(window.getDefaultView());
@@ -292,6 +370,7 @@ void Game::handleExploration(float dt) {
         }
     } else { grassTimer = 0.0f; }
 
+    // Caméra de suivi
     view.setCenter(player.getPosition());
     sf::Vector2f viewSize = view.getSize();
     sf::Vector2f center = view.getCenter();
@@ -305,6 +384,8 @@ void Game::handleExploration(float dt) {
 
 void Game::render() {
     window.clear(sf::Color::Black);
+    
+    // --- MENU ---
     if (currentState == GameState::MainMenu) {
         window.setView(window.getDefaultView());
         if (menuSelection == 0) {
@@ -318,15 +399,37 @@ void Game::render() {
         window.draw(playText);
         window.draw(quitText);
     }
+    // --- EXPLORATION ---
     else if (currentState == GameState::Exploration) {
         window.setView(view);
         window.clear(sf::Color(20, 20, 30));
         map.draw(window);
         player.draw(window);
     }
+    // --- COMBAT ---
     else if (currentState == GameState::Battle && battleSystem != nullptr) {
         window.setView(window.getDefaultView());
         battleSystem->draw(window);
     }
+    // --- RICKROLL ---
+    else if (currentState == GameState::RickRoll) {
+        // 1. Vue Fixe
+        sf::View fixedView(sf::FloatRect({0.f, 0.f}, {1280.f, 720.f}));
+        window.setView(fixedView);
+        window.clear(sf::Color::Black);
+
+        // 2. Mise à l'échelle 
+        sf::Vector2u texSize = rickTexture.getSize();
+        
+        if (texSize.y > 0) {
+            float scaleY = 720.f / static_cast<float>(texSize.y);
+            rickSprite.setScale({scaleY, scaleY}); 
+            rickSprite.setOrigin({static_cast<float>(texSize.x) / 2.f, static_cast<float>(texSize.y) / 2.f});
+            rickSprite.setPosition({640.f, 360.f});
+            
+            window.draw(rickSprite);
+        }
+    }
+    
     window.display();
 }

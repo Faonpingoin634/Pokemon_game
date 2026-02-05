@@ -7,7 +7,7 @@
 #include "Creature.hpp"
 #include <memory>
 
-enum class GameState { MainMenu, Exploration, Battle };
+enum class GameState { MainMenu, Exploration, Battle, RickRoll };
 
 class Game {
 public:
@@ -52,4 +52,10 @@ private:
     sf::Text playText;
     sf::Text quitText;
     int menuSelection;
+
+    // --- RICKROLL ---
+    bool hasRickrolled = false;
+    sf::Texture rickTexture;
+    sf::Sprite rickSprite;
+    sf::Music rickMusic;
 };
