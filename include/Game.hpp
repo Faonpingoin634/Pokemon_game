@@ -1,12 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> 
 #include "Map.hpp"
 #include "Player.hpp"
 #include "BattleSystem.hpp"
 #include "Creature.hpp"
 #include <memory>
 
-// 1. AJOUTE "MainMenu" ICI
 enum class GameState { MainMenu, Exploration, Battle };
 
 class Game {
@@ -21,9 +21,6 @@ private:
     void render();
 
     void handleExploration(float dt);
-    void handleBattle(float dt);
-    
-    // 2. AJOUTE CETTE FONCTION
     void handleMenuInput(sf::Keyboard::Key key);
 
     sf::RenderWindow window;
@@ -34,14 +31,24 @@ private:
 
     Map map;
     Player player;
+    
+    // --- POKÉMON ---
     Creature pikachu;
     Creature dracaufeu;
+    Creature togepi;
+    Creature noctowl;
+    Creature deoxys;
+
     BattleSystem* battleSystem;
     float grassTimer;
 
-    // 3. VARIABLES DU MENU (AJOUTE TOUT ÇA)
-    sf::Font font;         // 1. La police d'abord
-    sf::Text titleText;    // 2. Les textes ensuite
+    // --- AUDIO ---
+    sf::Music musicExploration; 
+    sf::Music musicBattle;
+
+    // --- MENU ---
+    sf::Font font;
+    sf::Text titleText;
     sf::Text playText;
     sf::Text quitText;
     int menuSelection;

@@ -74,6 +74,17 @@ void BattleSystem::startBattle(Creature& player, Creature& opponent) {
     playerCreature = &player;
     enemyCreature = &opponent;
     
+    // 1. CONFIGURATION DU JOUEUR
+    playerSprite.setTexture(player.texture, true);
+    playerSprite.setScale(player.sprite.getScale());
+    playerSprite.setPosition(player.sprite.getPosition());
+
+    // 2. CONFIGURATION DE L'ENNEMI
+    enemySprite.setTexture(opponent.texture, true);
+    enemySprite.setScale(opponent.sprite.getScale());
+    enemySprite.setPosition(opponent.sprite.getPosition());
+
+    // Réinitialisation de l'état du combat
     isPlayerTurn = true;
     battleEnded = false;
     isAnimating = false;
@@ -82,7 +93,6 @@ void BattleSystem::startBattle(Creature& player, Creature& opponent) {
     updateHealthUI();
     std::cout << "DEBUT COMBAT : " << player.name << " vs " << opponent.name << std::endl;
 }
-
 void BattleSystem::executeTurn(int moveIndex) {
     Move selectedMove = playerCreature->moves[moveIndex];
     bool shouldAnimate = false; 
@@ -142,13 +152,13 @@ void BattleSystem::update() {
     if (waitingForEnemy && !isAnimating && !battleEnded) {
         if (turnTimer.getElapsedTime().asSeconds() > 1.0f) {
             
-            // 1. Choix de l'attaque (40% Griffe / 40% Lance-Flamme / 20% Repos)
+            // 1. Choix de l'attaque
             int rng = std::rand() % 100;
             int moveIndex = 0;
 
-            if (rng < 40) moveIndex = 0;       // Griffe
-            else if (rng < 80) moveIndex = 1;  // Lance-Flamme
-            else moveIndex = 2;                // Repos
+            if (rng < 40) moveIndex = 0;      
+            else if (rng < 80) moveIndex = 1;  
+            else moveIndex = 2;                
 
             if (moveIndex >= (int)enemyCreature->moves.size()) moveIndex = 0;
 
