@@ -112,3 +112,11 @@ void Map::updateGeometry(sf::VertexArray& vertices, const std::vector<int>& tile
         }
     }
 }
+
+int Map::getDecorId(int x, int y) const {
+    // Sécurité pour ne pas crasher si on est hors map
+    if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) {
+        return -1;
+    }
+    return levelDecor[x + y * mapWidth];
+}

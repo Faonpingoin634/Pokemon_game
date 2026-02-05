@@ -1,63 +1,62 @@
-# 🎮 Pokémon Game Engine (C++ / SFML)
+# 🎮 Pokémon C++ Engine
 
-Un moteur de jeu 2D style RPG (type Pokémon) développé en **C++** avec la bibliothèque **SFML 3.0**.
+![C++](https://img.shields.io/badge/Language-C%2B%2B17-blue?logo=c%2B%2B)
+![SFML](https://img.shields.io/badge/Engine-SFML%203.0-green?logo=sfml)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey)
+![Status](https://img.shields.io/badge/Status-Playable%20Demo-orange)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
-Le projet a récemment évolué d'un script unique vers une **architecture Orientée Objet** propre (Classes séparées). Il intègre désormais des collisions complexes (sol et décor), une caméra intelligente et une transition vers le mode combat.
+Un jeu RPG en 2D inspiré de Pokémon, développé entièrement en **C++** avec la bibliothèque **SFML 3**. 
+Ce projet démontre une architecture orientée objet solide (Game States, Entity Component, Event Handling).
 
-## 🚀 Fonctionnalités Actuelles
+---
 
-### 🌍 Moteur & Carte
-* **Tilemap Engine :** Chargement de cartes via fichiers CSV.
-* **Système Double Couche :**
-    * *Calque Sol :* Fond de carte (Terre, Eau, Sable).
-    * *Calque Décor :* Objets (Arbres, Barrières, Fleurs).
-* **Collisions Avancées :**
-    * Système de **Whitelist** : Le code définit les tuiles traversables. Tout le reste (Arbres, Eau, Murs invisibles) devient solide.
-    * Le joueur "glisse" contre les murs (gestion indépendante des axes X et Y).
+## ✨ Fonctionnalités
 
-### 🎥 Caméra Intelligente
-* **Suivi Fluide :** La caméra reste centrée sur le joueur.
-* **Clamping (Verrouillage) :** La caméra ne sort **jamais** des limites de la carte. Fini les bandes noires autour du jeu !
-* **Zoom Sécurisé :** Le dézoom est bloqué mathématiquement pour ne pas dépasser la taille de la carte.
+### 🌍 Exploration & Monde
+* **Moteur de Tuiles (Tile Engine) :** Chargement de cartes via fichiers CSV (Calques Sol & Décor).
+* **Collisions :** Gestion des obstacles (arbres, eau) et des bordures de map.
+* **Caméra Dynamique :** Suivi fluide du joueur avec verrouillage sur les bords de la carte (Clamping).
+* **Hautes Herbes :** Système de rencontres aléatoires (RNG) basé sur le mouvement.
 
-### 🚶 Joueur & Animation
-* **Sprite Animé :** Gestion propre via la classe `Player`.
-* **4 Directions :** Animation de marche (Haut, Bas, Gauche, Droite) fluide.
-* **Gestion d'état :** Le joueur s'arrête sur la bonne frame quand il ne bouge plus.
+### ⚔️ Système de Combat
+* **Tour par Tour :** Logique de combat complète (Attaques, Soins, Gestion des PV).
+* **IA Ennemie :** L'adversaire choisit ses attaques aléatoirement.
+* **Interface Graphique (GUI) :** Barres de vie, curseur de sélection et logs de combat textuels.
+* **Bestiaire :** 5 Créatures implémentées dont 4 ennemies avec stats unique.
 
-### ⚔️ Système de Combat (WIP)
-* **Hautes Herbes (ID 80) :**
-    * Détection automatique quand le joueur marche dans les herbes.
-    * **Timer RNG :** 40% de chance de rencontre toutes les 0.4 secondes de marche.
+### 🎵 Audio & Ambiance
+* **Gestion Audio Dynamique :** Transition fluide entre la musique d'exploration et de combat.
+* **Easter Egg Caché :** Un événement spécial se déclenche sur une tuile précise de la carte (Case 102)... À vos risques et périls ! 🕺
 
+### ⬅️⬆️➡️⬇️ Déplacement et choix en Combat
+* **Gestion du déplacment :** Hors de la phase de combat vous pouvez vous déplacer sur la map avec Z, Q, S, D.
+* **Gestion du combat :** En combat vous pouvez naviguer dans les attaques avec Q, D mais aussi avec les flèches directionelle comme pour le menu.
 
-## 🛠 Architecture Technique
+---
 
-Le code a été entièrement refactorisé pour être modulaire et extensible :
+## 🛠️ Installation & Compilation
 
-* **`src/main.cpp` :** Le Chef d'orchestre. Il gère la boucle de jeu (Game Loop), les entrées clavier et l'alternance entre les états (Exploration/Battle).
-* **`src/Map.cpp` / `include/Map.hpp` :**
-    * Gère le chargement des fichiers `.csv`.
-    * Gère l'affichage optimisé (VertexArray).
-    * Contient la logique `isSolidAt(x, y)` pour vérifier les murs et l'eau.
-* **`src/Player.cpp` / `include/Player.hpp` :**
-    * Encapsule le Sprite SFML.
-    * Gère la logique d'animation (`update(dt)`) et les déplacements.
+### Prérequis
+* Un compilateur C++ compatible **C++17** (ex: `g++`).
+* La bibliothèque **SFML 3.0** (Version statique recommandée).
+* `Make` (pour utiliser le Makefile).
 
-## 📂 Structure du Projet
+### Structure des Dossiers
+Assurez-vous que votre dossier ressemble à ceci avant de lancer :
 
 ```text
-MonProjetPokemon/
-├── assets/                  # Ressources (Textures, CSV...)
-├── lib/                     # Bibliothèques SFML
-├── include/                 # Fichiers En-tête (.hpp)
-│   ├── Map.hpp              # Définition de la Carte
-│   ├── Player.hpp           # Définition du Joueur
-│   └── ...
-├── src/                     # Code Source (.cpp)
-│   ├── main.cpp             # Boucle principale
-│   ├── Map.cpp              # Implémentation Carte & Collisions
-│   └── Player.cpp           # Implémentation Joueur & Animation
-├── Makefile                 # Script de compilation automatisé
-├── README.md                # Documentation
-└── *.png / *.csv            # Fichiers de ressources (racine)
+MonProjet/
+├── Makefile
+├── Mappokemon_sol.csv
+├── Mappokemon_decord.csv
+├── free_pixel_16_woods.png
+├── player_sheet.png
+├── README.md
+├── lib/
+├── src/               # Code Source (.cpp)
+├── include/           # En-têtes (.hpp)
+└── assets/            # Ressources
+    ├── audio/         # .ogg
+    ├── textures/      # .png
+    └── fonts/         # .ttf

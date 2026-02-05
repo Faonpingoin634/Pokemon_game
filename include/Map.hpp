@@ -24,6 +24,8 @@ public:
     int getWidth() const { return mapWidth; }
     int getHeight() const { return mapHeight; }
 
+    int getDecorId(int x, int y) const;
+
 private:
     // Fonctions internes (cachées)
     std::vector<int> loadCsv(const std::string& filename);
