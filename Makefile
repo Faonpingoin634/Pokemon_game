@@ -1,10 +1,7 @@
-# 1. Le Compilateur
+# 1. Le Compilateur par défaut
 CXX = g++
 
-# 2. Le nom de ton jeu
-EXEC = monjeu.exe
-
-# 3. Les fichiers sources
+# 2. Les fichiers sources
 SRC = src/main.cpp \
       src/Map.cpp \
       src/Player.cpp \
@@ -12,23 +9,51 @@ SRC = src/main.cpp \
       src/Creature.cpp \
       src/Game.cpp
 
-# 4. Transformation automatique (.cpp -> .o)
+# Transformation automatique (.cpp -> .o)
 OBJ = $(SRC:.cpp=.o)
 
-# 5. Options de compilation (Header, Version C++, Static)
-CXXFLAGS = -Wall -Wextra -std=c++17 -DSFML_STATIC -I./include
+# Base des options de compilation pour tout le monde
+CXXFLAGS = -Wall -Wextra -std=c++17 -I./include
+LDFLAGS = 
 
-# 6. Options d'édition de liens (Libraries SFML et dépendances Windows)
-LDFLAGS = -Llib/Windows \
-          -Wl,--whole-archive -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-network -lsfml-system -Wl,--no-whole-archive \
-          -Wl,--start-group -lvorbisfile -lvorbisenc -lvorbis -logg -lFLAC -lfreetype -Wl,--end-group \
-          -lopengl32 -lwinmm -lgdi32 -lws2_32
+# --- DÉTECTION DU SYSTÈME D'EXPLOITATION ---
+
+ifeq ($(OS),Windows_NT)
+    # ===== CONFIGURATION WINDOWS =====
+    EXEC = monjeu.exe
+    CXXFLAGS += -DSFML_STATIC
+    # Chemins et librairies statiques spécifiques à Windows
+    LDFLAGS += -Llib/Windows \
+               -Wl,--whole-archive -lsfml-graphics-s -lsfml-window-s -lsfml-audio-s -lsfml-network-s -lsfml-system-s -Wl,--no-whole-archive \
+               -Wl,--start-group -lvorbisfile -lvorbisenc -lvorbis -logg -lFLAC -lfreetype -Wl,--end-group \
+               -lopengl32 -lwinmm -lgdi32 -lws2_32
+    # Commande de nettoyage pour Windows (si cmd.exe)
+    CLEAN_CMD = del /Q /S src\*.o 2>nul || rm -f src/*.o
+else
+    # Si on n'est pas sur Windows, on demande au système son nom
+    UNAME_S := $(shell uname -s)
+    EXEC = monjeu
+    CLEAN_CMD = rm -f src/*.o
+
+    ifeq ($(UNAME_S),Linux)
+        # ===== CONFIGURATION LINUX =====
+        # Utilisation des librairies dynamiques standards
+        LDFLAGS += -Llib/Linux -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-network -lsfml-system
+    endif
+
+    ifeq ($(UNAME_S),Darwin)
+        # ===== CONFIGURATION macOS =====
+        # Sur Mac, on préfère souvent clang++
+        CXX = clang++
+        LDFLAGS += -Llib/macOS -lsfml-graphics -lsfml-window -lsfml-audio -lsfml-network -lsfml-system
+    endif
+endif
 
 # --- RÈGLES ---
 
 all: $(EXEC)
 
-# Création de l'exécutable final en assemblant tous les .o
+# Création de l'exécutable final
 $(EXEC): $(OBJ)
 	@echo "Linking..."
 	$(CXX) $(OBJ) -o $(EXEC) $(LDFLAGS)
@@ -41,6 +66,6 @@ $(EXEC): $(OBJ)
 # Nettoyage
 clean:
 	@echo "Cleaning object files..."
-	rm -f src/*.o
+	$(CLEAN_CMD)
 
 re: clean all
